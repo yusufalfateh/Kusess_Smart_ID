@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KUSESS Smart ID - Smart Access Dashboard</title>
+
+  <!-- External Libraries: Chart.js & FontAwesome -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-dashboard: #F2F8FA;
+      --bg-card: #FFFFFF;
+      --bg-subcard: #E2F1F5;
+      
+      --primary-header: #0B3C48;
+      --primary-accent: #008CB4;
+      --primary-teal: #009DB8;
+      
+      --text-main: #062831;
+      --text-muted: #4A6D76;
+      --border-color: #CBE3E9;
+      
+      --status-success: #34C759;
+      --status-warning: #FF9500;
+      --status-danger: #FD282A;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-dashboard);
+      color: var(--text-main);
+      padding-bottom: 40px;
+    }
+
+    /* Top Navigation / Header */
+    .header-nav {
+      background-color: var(--primary-header);
+      color: #FFFFFF;
+      padding: 16px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(11, 60, 72, 0.15);
+    }
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .header-title i {
+      color: var(--primary-teal);
+      font-size: 26px;
+    }
+
+    /* Navigasi Tab */
+    .tab-container {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tab-btn {
+      background-color: rgba(255, 255, 255, 0.12);
+      color: #D1E5EA;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+    }
+
+    .tab-btn.active {
+      background-color: var(--bg-dashboard);
+      color: var(--primary-header);
+      font-weight: 700;
+    }
+
+    /* Container Utama */
+    .container {
+      max-width: 1350px;
+      margin: 25px auto;
+      padding: 0 20px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Grid Kartu KPI */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .kpi-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(11, 60, 72, 0.05);
+      position: relative;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 6px;
+      height: 100%;
+      border-radius: 10px 0 0 10px;
+      background-color: var(--primary-accent);
+    }
+
+    .kpi-card.danger::before { background-color: var(--status-danger); }
+    .kpi-card.warning::before { background-color: var(--status-warning); }
+
+    .kpi-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 8px 0 4px 0;
+    }
+
+    .kpi-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Panel Card */
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 8px rgba(11, 60, 72, 0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      margin-bottom: 18px;
+      border-bottom: 2px solid var(--bg-subcard);
+    }
+
+    .card-header h3 {
+      font-size: 17px;
+      color: var(--primary-header);
+      font-weight: 700;
+    }
+
+    .card-header .note {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Grid Layout Grafik */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 20px;
+    }
+
+    /* Filter & Search Controls */
+    .control-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 8px 14px;
+      width: 320px;
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      margin-left: 8px;
+      width: 100%;
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .filter-group select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Tabel Data */
+    .table-container {
+      overflow-x: auto;
+      max-height: 550px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      background-color: var(--primary-header);
+      color: #FFFFFF;
+      padding: 12px 16px;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .data-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .data-table tr:hover {
+      background-color: var(--bg-subcard);
+    }
+
+    /* Lencana Status / Badge */
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    .badge-success { background-color: #E8F8EC; color: #1B7A32; }
+    .badge-danger { background-color: #FDE8E8; color: #C01E1E; }
+    .badge-high { background-color: var(--status-danger); color: #FFFFFF; }
+    .badge-medium { background-color: #FFEAD0; color: #B76200; }
+    .badge-low { background-color: var(--bg-subcard); color: var(--primary-header); }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation Utama -->
+  <div class="header-nav">
+    <div>
+      <div class="header-title">
+        <i class="fa-solid fa-id-card"></i> KUSESS Smart ID
+      </div>
+      <div class="tab-container">
+        <button class="tab-btn active" onclick="switchTab('main-dashboard', this)">Main Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('anomaly-monitoring', this)">Anomaly Monitoring</button>
+        <button class="tab-btn" onclick="switchTab('access-monitoring', this)">Access Monitoring</button>
+      </div>
+    </div>
+    <div style="font-size: 13px; color: #D1E5EA;">
+      <i class="fa-solid fa-circle" style="color: var(--status-success); font-size: 10px;"></i> System Live Sync
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- TAB 1: MAIN DASHBOARD -->
+    <div id="main-dashboard" class="tab-content active">
+      
+      <!-- Kartu Ringkasan KPI -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Total Access Events</div>
+          <div class="kpi-value">1,428</div>
+          <div class="kpi-subtitle">(for the past 24 hours)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Total Students</div>
+          <div class="kpi-value">119</div>
+          <div class="kpi-subtitle">(Active users scanned)</div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="kpi-title">Anomalies Detected</div>
+          <div class="kpi-value">12</div>
+          <div class="kpi-subtitle">(Requires immediate attention)</div>
+        </div>
+        <div class="kpi-card warning">
+          <div class="kpi-title">Anomaly Rate</div>
+          <div class="kpi-value">0.84%</div>
+          <div class="kpi-subtitle">(Anomaly rate vs Total Access in past 24 hours)</div>
+        </div>
+      </div>
+
+      <!-- Ringkasan Jenis Anomali -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Type of Anomalies Detected</h3>
+          <span class="note">Refer to subsequent tab (Anomaly Monitoring) for detailed logs</span>
+        </div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px; background: var(--bg-subcard); padding: 15px; border-radius: 8px;">
+            <div style="font-size: 12px; color: var(--text-muted);">Passback Abuse</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--status-danger);">4 Cases</div>
+          </div>
+          <div style="flex: 1; min-width: 200px; background: var(--bg-subcard); padding: 15px; border-radius: 8px;">
+            <div style="font-size: 12px; color: var(--text-muted);">Restricted Area Trespass</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--status-danger);">3 Cases</div>
+          </div>
+          <div style="flex: 1; min-width: 200px; background: var(--bg-subcard); padding: 15px; border-radius: 8px;">
+            <div style="font-size: 12px; color: var(--text-muted);">Night Time Access</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--status-warning);">2 Cases</div>
+          </div>
+          <div style="flex: 1; min-width: 200px; background: var(--bg-subcard); padding: 15px; border-radius: 8px;">
+            <div style="font-size: 12px; color: var(--text-muted);">Expired / Unregistered Card</div>
+            <div style="font-size: 20px; font-weight: 700; color: var(--status-warning);">3 Cases</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid Grafik / Chart -->
+      <div class="charts-grid">
+        <div class="card">
+          <div class="card-header">
+            <h3>Access Events within the Past 24 hours</h3>
+          </div>
+          <canvas id="accessEventsChart" height="220"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Access Status <span style="font-size: 13px; font-weight: 400; color: var(--text-muted);">(Success vs Denied)</span></h3>
+          </div>
+          <canvas id="accessStatusChart" height="220"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Anomalies based on Location</h3>
+          </div>
+          <canvas id="anomalyLocationChart" height="220"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Anomalies based on Categories</h3>
+          </div>
+          <canvas id="anomalyCategoryChart" height="220"></canvas>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TAB 2: ANOMALY MONITORING -->
+    <div id="anomaly-monitoring" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h3>Anomaly Monitoring</h3>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+          The following are the anomalies detected across KUSESS facilities. These require further inspection and follow-up.
+        </p>
+
+        <div class="control-panel">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+            <input type="text" id="anomalySearchInput" placeholder="Find Student/ Location/ Category…">
+          </div>
+          <div class="filter-group">
+            <label for="anomalyFilter">Severity:</label>
+            <select id="anomalyFilter">
+              <option value="ALL">All Anomalies</option>
+              <option value="HIGH">HIGH</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="LOW">LOW</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table" id="anomalyTable">
+            <thead>
+              <tr>
+                <th>Date and Time</th>
+                <th>Student Name</th>
+                <th>Class</th>
+                <th>Location</th>
+                <th>Anomaly Category</th>
+                <th>Severity Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-09-23 22:45:00</td>
+                <td>Puteri Nadhirah binti Rosli</td>
+                <td>Tingkatan 3 Intan</td>
+                <td>Bengkel RBT</td>
+                <td>Ceroboh Kawasan Larangan</td>
+                <td><span class="badge badge-high">HIGH</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 23:15:10</td>
+                <td>Muhammad Haikal bin Ahmad</td>
+                <td>Tingkatan 5 Mutiara</td>
+                <td>Blok Asrama Lelaki</td>
+                <td>Akses Malam Dilarang</td>
+                <td><span class="badge badge-high">HIGH</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 07:10:15</td>
+                <td>Mohd Yusuf bin Abu</td>
+                <td>Tingkatan 2 Delima</td>
+                <td>Pintu Utama Gate A</td>
+                <td>Pengguna Kad Berulang (Passback)</td>
+                <td><span class="badge badge-high">HIGH</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 14:22:05</td>
+                <td>Ahmad Danial bin Razak</td>
+                <td>Tingkatan 4 Mutiara</td>
+                <td>Pintu Utama Gate A</td>
+                <td>Pengguna Kad Berulang (Passback)</td>
+                <td><span class="badge badge-high">HIGH</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 18:05:40</td>
+                <td>Siti Nurhaliza binti Ishak</td>
+                <td>Tingkatan 5 Intan</td>
+                <td>Dewan Makan</td>
+                <td>Pengguna Kad Berulang (Passback)</td>
+                <td><span class="badge badge-high">HIGH</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 21:30:12</td>
+                <td>Nurul Izzah binti Anwar</td>
+                <td>Tingkatan 3 Delima</td>
+                <td>Bilik Server IT</td>
+                <td>Ceroboh Kawasan Larangan</td>
+                <td><span class="badge badge-high">HIGH</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 10:30:15</td>
+                <td>Muhammad Zikri bin Mansor</td>
+                <td>Tingkatan 1 Nilam</td>
+                <td>Makmal Sains 2</td>
+                <td>Kad Tamat Tempoh</td>
+                <td><span class="badge badge-medium">MEDIUM</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 08:15:33</td>
+                <td>Siti Zulaikha binti Abdullah</td>
+                <td>Tingkatan 4 Delima</td>
+                <td>Pusat Sumber</td>
+                <td>Kad Tidak Didaftarkan</td>
+                <td><span class="badge badge-medium">MEDIUM</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 11:45:00</td>
+                <td>Luqman Hakim bin Ridzuan</td>
+                <td>Tingkatan 2 Nilam</td>
+                <td>Kantin Sekolah</td>
+                <td>Kad Tidak Didaftarkan</td>
+                <td><span class="badge badge-medium">MEDIUM</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 13:10:00</td>
+                <td>Aiman Farhan bin Ismail</td>
+                <td>Tingkatan 1 Intan</td>
+                <td>Pusat Sumber</td>
+                <td>Kad Tamat Tempoh</td>
+                <td><span class="badge badge-medium">MEDIUM</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 15:45:00</td>
+                <td>Puteri Sofea binti Yusof</td>
+                <td>Tingkatan 2 Delima</td>
+                <td>Makmal Komputer 1</td>
+                <td>Akses Luar Waktu Jadual</td>
+                <td><span class="badge badge-low">LOW</span></td>
+              </tr>
+              <tr>
+                <td>2026-09-23 16:20:18</td>
+                <td>Amirul Ashraf bin Zahid</td>
+                <td>Tingkatan 3 Mutiara</td>
+                <td>Gimnasium KUSESS</td>
+                <td>Akses Luar Waktu Jadual</td>
+                <td><span class="badge badge-low">LOW</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TAB 3: ACCESS MONITORING -->
+    <div id="access-monitoring" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h3>Access Monitoring</h3>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+          Detailed Live Access Record log for all smart card readers in KUSESS.
+        </p>
+
+        <div class="control-panel">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass" style="color: var(--text-muted);"></i>
+            <input type="text" id="accessSearchInput" placeholder="Find Student/ Location/ Reader ID…">
+          </div>
+          <div class="filter-group">
+            <label for="accessStatusFilter">Status:</label>
+            <select id="accessStatusFilter">
+              <option value="ALL">All Status</option>
+              <option value="SUCCESS">SUCCESS</option>
+              <option value="DENIED">DENIED</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table" id="accessTable">
+            <thead>
+              <tr>
+                <th>Date and Time</th>
+                <th>Student Name</th>
+                <th>Location / Reader ID</th>
+                <th>Access Status</th>
+                <th>Anomaly Category (if any)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-09-23 23:15:10</td>
+                <td>Muhammad Haikal bin Ahmad</td>
+                <td>Blok Asrama Lelaki (RDR-ASM-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Akses Malam Dilarang</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 22:45:00</td>
+                <td>Puteri Nadhirah binti Rosli</td>
+                <td>Bengkel RBT (RDR-RBT-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Ceroboh Kawasan Larangan</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 21:30:12</td>
+                <td>Nurul Izzah binti Anwar</td>
+                <td>Bilik Server IT (RDR-IT-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Ceroboh Kawasan Larangan</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 20:10:00</td>
+                <td>Khairul Amri bin Nizam</td>
+                <td>Dewan Makan (RDR-DM-02)</td>
+                <td><span class="badge badge-success">SUCCESS</span></td>
+                <td>Normal</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 18:05:40</td>
+                <td>Siti Nurhaliza binti Ishak</td>
+                <td>Dewan Makan (RDR-DM-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Pengguna Kad Berulang (Passback)</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 17:15:00</td>
+                <td>Mohd Firdaus bin Hamid</td>
+                <td>Pintu Utama (RDR-GATE-01)</td>
+                <td><span class="badge badge-success">SUCCESS</span></td>
+                <td>Normal</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 16:40:10</td>
+                <td>Muhammad Haikal bin Ahmad</td>
+                <td>Pintu Utama (RDR-GATE-02)</td>
+                <td><span class="badge badge-success">SUCCESS</span></td>
+                <td>Normal</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 16:20:18</td>
+                <td>Amirul Ashraf bin Zahid</td>
+                <td>Gimnasium KUSESS (RDR-GYM-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Akses Luar Waktu Jadual</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 15:45:00</td>
+                <td>Puteri Sofea binti Yusof</td>
+                <td>Makmal Komputer 1 (RDR-LAB-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Akses Luar Waktu Jadual</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 15:30:11</td>
+                <td>Nur Ariana binti Zulkifli</td>
+                <td>Makmal Komputer 1 (RDR-LAB-01)</td>
+                <td><span class="badge badge-success">SUCCESS</span></td>
+                <td>Normal</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 14:22:05</td>
+                <td>Ahmad Danial bin Razak</td>
+                <td>Pintu Utama (RDR-GATE-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Pengguna Kad Berulang (Passback)</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 13:10:00</td>
+                <td>Aiman Farhan bin Ismail</td>
+                <td>Pusat Sumber (RDR-LIB-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Kad Tamat Tempoh</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 11:45:00</td>
+                <td>Luqman Hakim bin Ridzuan</td>
+                <td>Kantin Sekolah (RDR-KTN-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Kad Tidak Didaftarkan</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 10:30:15</td>
+                <td>Muhammad Zikri bin Mansor</td>
+                <td>Makmal Sains 2 (RDR-SCI-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Kad Tamat Tempoh</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 08:45:20</td>
+                <td>Nur Iman binti Hashim</td>
+                <td>Pusat Sumber (RDR-LIB-01)</td>
+                <td><span class="badge badge-success">SUCCESS</span></td>
+                <td>Normal</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 08:15:33</td>
+                <td>Siti Zulaikha binti Abdullah</td>
+                <td>Pusat Sumber (RDR-LIB-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Kad Tidak Didaftarkan</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 07:10:15</td>
+                <td>Mohd Yusuf bin Abu</td>
+                <td>Pintu Utama (RDR-GATE-01)</td>
+                <td><span class="badge badge-danger">DENIED</span></td>
+                <td>Pengguna Kad Berulang (Passback)</td>
+              </tr>
+              <tr>
+                <td>2026-09-23 06:50:00</td>
+                <td>Harith Imran bin Fauzi</td>
+                <td>Pintu Utama (RDR-GATE-02)</td>
+                <td><span class="badge badge-success">SUCCESS</span></td>
+                <td>Normal</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // 1. FUNGSI PERTUKARAN TAB DASHBOARD
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // 2. FUNGSI CARIAN & FILTER ACCESS MONITORING
+    function filterAccessTable() {
+      var searchInput = document.getElementById('accessSearchInput');
+      var filterSelect = document.getElementById('accessStatusFilter');
+
+      var searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      var filterVal = filterSelect ? filterSelect.value.toUpperCase().trim() : 'ALL';
+
+      var table = document.getElementById('accessTable');
+      if (!table) return;
+
+      var rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var rowText = row.innerText.toLowerCase();
+
+        // Status (Col index 3)
+        var statusCell = row.cells[3];
+        var statusText = statusCell ? statusCell.innerText.toUpperCase().trim() : '';
+
+        var matchesSearch = (searchVal === '' || rowText.indexOf(searchVal) > -1);
+        var matchesStatus = (filterVal === 'ALL' || statusText.indexOf(filterVal) > -1);
+
+        row.style.display = (matchesSearch && matchesStatus) ? '' : 'none';
+      }
+    }
+
+    // 3. FUNGSI CARIAN & FILTER ANOMALY MONITORING
+    function filterAnomalyTable() {
+      var searchInput = document.getElementById('anomalySearchInput');
+      var filterSelect = document.getElementById('anomalyFilter');
+
+      var searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      var filterVal = filterSelect ? filterSelect.value.toUpperCase().trim() : 'ALL';
+
+      var table = document.getElementById('anomalyTable');
+      if (!table) return;
+
+      var rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var rowText = row.innerText.toLowerCase();
+
+        // Severity (Col index 5)
+        var severityCell = row.cells[5];
+        var severityText = severityCell ? severityCell.innerText.toUpperCase().trim() : '';
+
+        var matchesSearch = (searchVal === '' || rowText.indexOf(searchVal) > -1);
+        var matchesSeverity = (filterVal === 'ALL' || severityText.indexOf(filterVal) > -1);
+
+        row.style.display = (matchesSearch && matchesSeverity) ? '' : 'none';
+      }
+    }
+
+    // 4. PASANG EVENT LISTENERS SEBAIK DOM SEDIA
+    document.addEventListener('DOMContentLoaded', function() {
+      var accessInput = document.getElementById('accessSearchInput');
+      var accessSelect = document.getElementById('accessStatusFilter');
+      if (accessInput) {
+        accessInput.addEventListener('input', filterAccessTable);
+        accessInput.addEventListener('keyup', filterAccessTable);
+      }
+      if (accessSelect) {
+        accessSelect.addEventListener('change', filterAccessTable);
+      }
+
+      var anomalyInput = document.getElementById('anomalySearchInput');
+      var anomalySelect = document.getElementById('anomalyFilter');
+      if (anomalyInput) {
+        anomalyInput.addEventListener('input', filterAnomalyTable);
+        anomalyInput.addEventListener('keyup', filterAnomalyTable);
+      }
+      if (anomalySelect) {
+        anomalySelect.addEventListener('change', filterAnomalyTable);
+      }
+
+      // Inisialisasi Chart.js dengan Data Set KUSESS
+      try {
+        const primaryTeal = '#009DB8';
+        const primaryAccent = '#008CB4';
+        const statusDanger = '#FD282A';
+        const statusSuccess = '#34C759';
+        const statusWarning = '#FF9500';
+
+        // 1. Access Events 24 Hours Line Chart
+        new Chart(document.getElementById('accessEventsChart'), {
+          type: 'line',
+          data: {
+            labels: ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+            datasets: [{
+              label: 'Total Scans',
+              data: [145, 320, 210, 280, 195, 225, 130, 85, 38],
+              borderColor: primaryAccent,
+              backgroundColor: 'rgba(0, 140, 180, 0.12)',
+              fill: true,
+              tension: 0.35
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+
+        // 2. Access Status Doughnut Chart (SUCCESS vs DENIED)
+        new Chart(document.getElementById('accessStatusChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['SUCCESS', 'DENIED'],
+            datasets: [{
+              data: [1416, 12],
+              backgroundColor: [statusSuccess, statusDanger]
+            }]
+          },
+          options: { responsive: true }
+        });
+
+        // 3. Anomaly Location Bar Chart
+        new Chart(document.getElementById('anomalyLocationChart'), {
+          type: 'bar',
+          data: {
+            labels: ['Pintu Utama', 'Dewan Makan', 'Pusat Sumber', 'Bengkel RBT', 'Makmal Sains', 'Blok Asrama'],
+            datasets: [{
+              label: 'Anomalies',
+              data: [3, 2, 2, 2, 2, 1],
+              backgroundColor: primaryTeal
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+
+        // 4. Anomaly Category Pie Chart
+        new Chart(document.getElementById('anomalyCategoryChart'), {
+          type: 'pie',
+          data: {
+            labels: ['Passback Abuse', 'Restricted Area', 'Expired/Unregistered', 'Night Time Access', 'Out of Schedule'],
+            datasets: [{
+              data: [4, 3, 3, 2, 2],
+              backgroundColor: [statusDanger, '#E63946', '#F4A261', statusWarning, primaryAccent]
+            }]
+          },
+          options: { responsive: true }
+        });
+
+      } catch (err) {
+        console.log("Chart loading issue bypassed:", err);
+      }
+    });
+  </script>
+</body>
+</html>
